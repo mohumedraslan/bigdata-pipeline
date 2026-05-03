@@ -54,6 +54,10 @@ INFLUX_ORG      = os.getenv("INFLUX_ORG", "smart_parking")
 INFLUX_BUCKET   = os.getenv("INFLUX_BUCKET", "sensor_data")
 MONGO_URI       = os.getenv("MONGO_URI", "mongodb://mongo:27017/")
 MONGO_DB        = os.getenv("MONGO_DB", "smart_parking")
+SPARK_JARS_PACKAGES = os.getenv(
+    "SPARK_JARS_PACKAGES",
+    "org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.1",
+)
 
 # ── Kafka → Spark sensor schema ───────────────────────────────────────────────
 SENSOR_SCHEMA = StructType([
@@ -98,7 +102,7 @@ def write_to_influx(df: DataFrame, epoch_id: int) -> None:
                 row["front_cm"], row["rear_cm"],
                 row["left_cm"],  row["right_cm"]
             )))
-            .time(row["ts"], WritePrecision.NANOSECONDS)
+            .time(row["ts"], WritePrecision.NS)
         )
         points.append(p)
 
@@ -127,6 +131,7 @@ def main() -> None:
     spark = (
         SparkSession.builder
         .appName("SmartParking-StreamProcessor")
+        .config("spark.jars.packages", SPARK_JARS_PACKAGES)
         # Kafka package is provided by the Dockerfile SPARK_JARS_PACKAGES env var
         .config("spark.sql.shuffle.partitions", "4")   # keep it small for local mode
         .config("spark.streaming.stopGracefullyOnShutdown", "true")

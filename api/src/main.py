@@ -45,6 +45,21 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.get("/")
+def root():
+    return {
+        "message": "Smart Parking API",
+        "endpoints": [
+            "/health",
+            "/units",
+            "/units/{unit_id}/latest",
+            "/sessions",
+            "/sessions/{session_id}",
+            "/stats/clearance",
+            "/alerts",
+        ],
+    }
+
 # ── DB clients (module-level singletons) ──────────────────────────────────────
 _mongo   = MongoClient(MONGO_URI)
 _influx  = InfluxDBClient(url=INFLUX_URL, token=INFLUX_TOKEN, org=INFLUX_ORG)
