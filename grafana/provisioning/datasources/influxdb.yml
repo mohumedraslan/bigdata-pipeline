@@ -1,0 +1,16 @@
+apiVersion: 1
+
+datasources:
+  - name: InfluxDB
+    type: influxdb
+    access: proxy
+    url: http://influxdb:8086
+    jsonData:
+      version: Flux
+      organization: smart_parking
+      defaultBucket: sensor_data
+      tlsSkipVerify: true
+    secureJsonData:
+      token: super-secret-token-change-me
+    isDefault: true
+    editable: true
