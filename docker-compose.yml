@@ -1,5 +1,3 @@
-version: "3.9"
-
 # ─────────────────────────────────────────────────────────────────────────────
 #  Smart Parking – Big Data Pipeline
 #  Stack: Kafka · InfluxDB · MongoDB · PySpark · Grafana · FastAPI
@@ -25,7 +23,7 @@ services:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
     healthcheck:
-      test: ["CMD", "bash", "-c", "echo ruok | nc localhost 2181 | grep imok"]
+      test: ["CMD", "bash", "-c", "echo srvr | nc -w 5 localhost 2181 | grep -q Mode"]
       interval: 10s
       timeout: 5s
       retries: 5
