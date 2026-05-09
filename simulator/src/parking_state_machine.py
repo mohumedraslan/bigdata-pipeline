@@ -1,17 +1,3 @@
-"""
-simulator/src/parking_state_machine.py
-───────────────────────────────────────
-Models a truck performing a reversing-into-spot manoeuvre.
-The state machine advances through realistic phases so that
-the sensor readings look physically plausible rather than random.
-
-Physics model (simplified):
-  - Truck approaches from ~500 cm out
-  - Aligns within ±20 cm of spot centre-line
-  - Reverses slowly into the spot
-  - Confirms all-round clearance before declaring PARKED
-"""
-
 from __future__ import annotations
 import math
 import random
@@ -21,61 +7,42 @@ from typing import Tuple
 
 from schemas import Phase, Decision, SensorReading, ParkingDecision
 
-# ── Thresholds (cm) ───────────────────────────────────────────────────────────
-APPROACH_DONE   = 150   # switch from APPROACHING → ALIGNING when front < this
-ALIGN_DONE      = 80    # switch to REVERSING when lateral error < this
-REVERSE_DONE    = 25    # switch to CONFIRMING when rear < this
-CONFIRM_DONE    = 20    # switch to PARKED when all sides stable
-EMERGENCY_STOP  = 12    # hard-stop any phase
+APPROACH_DONE   = 150
+ALIGN_DONE      = 80
+REVERSE_DONE    = 25
+CONFIRM_DONE    = 20
+EMERGENCY_STOP  = 12
 
-# ── Noise model ───────────────────────────────────────────────────────────────
 def _noise(sigma: float = 2.0) -> float:
-    """Gaussian sensor noise."""
     return random.gauss(0, sigma)
 
 
 @dataclass
 class TruckUnit:
-    """
-    Simulates one truck performing a single parking session.
-
-    Attributes
-    ----------
-    unit_id   : e.g. "TRUCK_001"
-    spot_id   : e.g. "SPOT_B4"
-    session_id: UUID for the whole manoeuvre
-    phase     : current Phase label
-    """
     unit_id: str
     spot_id: str
     session_id: str = field(default_factory=lambda: str(uuid.uuid4()))
     phase: Phase = "APPROACHING"
 
-    # Internal continuous state
-    _front: float  = field(default=500.0, repr=False)  # cm
+    _front: float  = field(default=500.0, repr=False)
     _rear:  float  = field(default=600.0, repr=False)
     _left:  float  = field(default=200.0, repr=False)
     _right: float  = field(default=200.0, repr=False)
-    _servo: int    = field(default=90,    repr=False)   # degrees (90 = straight)
-    _speed: float  = field(default=0.0,  repr=False)   # m/s
+    _servo: int    = field(default=90,    repr=False)
+    _speed: float  = field(default=0.0,  repr=False)
     _lateral_err: float = field(default_factory=lambda: random.uniform(-40, 40), repr=False)
 
     def step(self) -> Tuple[SensorReading, ParkingDecision]:
-        """
-        Advance physics one tick and return (SensorReading, ParkingDecision).
-        """
         decision, confidence = self._decide()
         self._apply(decision)
         reading  = self._make_reading()
         dec_rec  = self._make_decision(decision, confidence)
         return reading, dec_rec
 
-    # ── Phase-aware decision logic ─────────────────────────────────────────
     def _decide(self) -> Tuple[Decision, float]:
         front = self._front
         rear  = self._rear
 
-        # Emergency override – highest priority
         if min(front, rear, self._left, self._right) < EMERGENCY_STOP:
             return "EMERGENCY_STOP", 1.0
 
@@ -112,10 +79,9 @@ class TruckUnit:
         if self.phase == "PARKED":
             return "STOP", 1.0
 
-        return "STOP", 0.5   # fallback
+        return "STOP", 0.5
 
     def _apply(self, decision: Decision) -> None:
-        """Update internal continuous state based on decision."""
         if decision == "MOVE_FORWARD":
             self._front = max(0, self._front - random.uniform(5, 15))
             self._rear  = min(700, self._rear + random.uniform(5, 12))
@@ -178,7 +144,6 @@ class TruckUnit:
         return self.phase == "PARKED"
 
     def reset(self) -> None:
-        """Start a new session after parking is complete."""
         self.session_id   = str(uuid.uuid4())
         self.phase        = "APPROACHING"
         self._front       = random.uniform(450, 550)

@@ -1,17 +1,3 @@
-"""
-consumers/src/alert_consumer.py
-────────────────────────────────
-Dedicated consumer for the parking.alerts topic.
-
-In production this is where you would:
-  • Send push notifications to operators
-  • Write to a PagerDuty / Slack webhook
-  • Trigger a physical alarm / emergency stop relay on the truck
-
-For the university demo it prints a structured alert log and persists
-all alerts to MongoDB for post-incident analysis.
-"""
-
 import os
 import json
 import logging
@@ -55,7 +41,7 @@ def main() -> None:
     mongo    = MongoClient(MONGO_URI)
     col      = mongo[MONGO_DB]["alerts"]
 
-    log.info("🚨 Alert consumer listening on topic: %s", TOPIC_ALERTS)
+    log.info("Alert consumer listening on topic: %s", TOPIC_ALERTS)
 
     for msg in consumer:
         alert = msg.value
@@ -65,11 +51,10 @@ def main() -> None:
         message  = alert.get("message",  "")
 
         if severity == "CRITICAL":
-            log.critical("🔴 [%s] %s", unit_id, message)
+            log.critical("[%s] %s", unit_id, message)
         else:
-            log.warning("🟡 [%s] %s", unit_id, message)
+            log.warning("[%s] %s", unit_id, message)
 
-        # Persist for post-incident review
         col.insert_one(alert)
 
 
