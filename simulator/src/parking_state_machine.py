@@ -11,7 +11,7 @@ APPROACH_DONE   = 150
 ALIGN_DONE      = 80
 REVERSE_DONE    = 25
 CONFIRM_DONE    = 20
-EMERGENCY_STOP  = 12
+EMERGENCY_STOP  = 8
 
 def _noise(sigma: float = 2.0) -> float:
     return random.gauss(0, sigma)
@@ -70,7 +70,7 @@ class TruckUnit:
             return "MOVE_BACKWARD", round(random.uniform(0.85, 0.98), 2)
 
         if self.phase == "CONFIRMING":
-            sides_ok = self._left > 20 and self._right > 20
+            sides_ok = self._left > 35 and self._right > 35
             if rear > CONFIRM_DONE and sides_ok:
                 self.phase = "PARKED"
                 return "STOP", 1.0
@@ -85,26 +85,30 @@ class TruckUnit:
         if decision == "MOVE_FORWARD":
             self._front = max(0, self._front - random.uniform(5, 15))
             self._rear  = min(700, self._rear + random.uniform(5, 12))
+            self._left  = min(300, max(30, self._left + random.uniform(-2, 2)))
+            self._right = min(300, max(30, self._right + random.uniform(-2, 2)))
             self._speed = 0.4
             self._servo = 90
 
         elif decision == "MOVE_BACKWARD":
             self._rear  = max(0, self._rear - random.uniform(3, 8))
             self._front = min(700, self._front + random.uniform(3, 8))
+            self._left  = min(300, max(30, self._left + random.uniform(-2, 2)))
+            self._right = min(300, max(30, self._right + random.uniform(-2, 2)))
             self._speed = -0.2
             self._servo = 90
 
         elif decision in ("NUDGE_LEFT", "TURN_LEFT"):
-            self._lateral_err = max(-5, self._lateral_err - random.uniform(2, 8))
-            self._left  = max(10, self._left - random.uniform(1, 5))
-            self._right = min(300, self._right + random.uniform(1, 5))
+            self._lateral_err = max(-5, self._lateral_err - random.uniform(2, 6))
+            self._left  = max(30, self._left - random.uniform(0.5, 2.5))
+            self._right = min(300, self._right + random.uniform(0.5, 2.5))
             self._servo = random.randint(50, 75)
             self._speed = 0.1
 
         elif decision in ("NUDGE_RIGHT", "TURN_RIGHT"):
-            self._lateral_err = min(5, self._lateral_err + random.uniform(2, 8))
-            self._right = max(10, self._right - random.uniform(1, 5))
-            self._left  = min(300, self._left + random.uniform(1, 5))
+            self._lateral_err = min(5, self._lateral_err + random.uniform(2, 6))
+            self._right = max(30, self._right - random.uniform(0.5, 2.5))
+            self._left  = min(300, self._left + random.uniform(0.5, 2.5))
             self._servo = random.randint(105, 130)
             self._speed = 0.1
 

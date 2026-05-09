@@ -54,7 +54,7 @@ class SensorReading:
 
     @property
     def is_critical(self) -> bool:
-        return self.min_clearance < 15.0
+        return self.min_clearance < 10.0
 
 
 @dataclass

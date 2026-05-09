@@ -10,9 +10,12 @@ from influxdb_client import InfluxDBClient
 MONGO_URI    = os.getenv("MONGO_URI",    "mongodb://mongo:27017/")
 MONGO_DB     = os.getenv("MONGO_DB",    "smart_parking")
 INFLUX_URL   = os.getenv("INFLUX_URL",  "http://influxdb:8086")
-INFLUX_TOKEN = os.getenv("INFLUX_TOKEN","super-secret-token-change-me")
+INFLUX_TOKEN = os.getenv("INFLUX_TOKEN")
 INFLUX_ORG   = os.getenv("INFLUX_ORG",  "smart_parking")
 INFLUX_BUCKET= os.getenv("INFLUX_BUCKET","sensor_data")
+
+if not INFLUX_TOKEN:
+    raise RuntimeError("INFLUX_TOKEN is required for InfluxDB authentication")
 
 app = FastAPI(
     title="Smart Parking – Pipeline API",

@@ -87,7 +87,7 @@ services:
       DOCKER_INFLUXDB_INIT_PASSWORD: admin123456
       DOCKER_INFLUXDB_INIT_ORG: smart_parking
       DOCKER_INFLUXDB_INIT_BUCKET: sensor_data
-      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: super-secret-token-change-me
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: ${INFLUX_TOKEN}
       DOCKER_INFLUXDB_INIT_RETENTION: 7d
     healthcheck:
       test: ["CMD", "influx", "ping"]
@@ -175,6 +175,7 @@ services:
     image: grafana/grafana:10.4.2
     container_name: grafana
     networks: [parking-net]
+    env_file: .env
     ports:
       - "3000:3000"
     depends_on:

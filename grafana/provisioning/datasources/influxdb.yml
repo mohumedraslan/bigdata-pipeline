@@ -11,6 +11,6 @@ datasources:
       defaultBucket: sensor_data
       tlsSkipVerify: true
     secureJsonData:
-      token: super-secret-token-change-me
+      token: ${INFLUX_TOKEN}
     isDefault: true
     editable: true
