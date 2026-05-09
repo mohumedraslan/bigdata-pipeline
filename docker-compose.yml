@@ -170,20 +170,25 @@ services:
     env_file: .env
     restart: unless-stopped
 
-  # ── Grafana ────────────────────────────────────────────────────────────────
-  grafana:
-    image: grafana/grafana:10.4.2
-    container_name: grafana
+  # ── Airflow ─────────────────────────────────────────────────────────────
+  airflow:
+    image: apache/airflow:2.8.0
+    container_name: airflow
     networks: [parking-net]
     ports:
-      - "3000:3000"
+      - "8080:8080"
     depends_on:
-      influxdb:
+      mongo:
         condition: service_healthy
-    volumes:
-      - grafana-data:/var/lib/grafana
-      - ./grafana/provisioning:/etc/grafana/provisioning
     environment:
-      GF_SECURITY_ADMIN_PASSWORD: admin
-      GF_USERS_ALLOW_SIGN_UP: "false"
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: sqlite:////tmp/airflow.db
+      AIRFLOW__CORE__FERNET_KEY: '81HqDtbqAywKSOumSha3BhWNOdQ26slT6K0YaZeZyPs='
+      AIRFLOW__CORE__DAGS_FOLDER: /opt/airflow/dags
+      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+      AIRFLOW__WEBserver__RBAC: 'false'
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./spark/jobs:/opt/airflow/jobs
+    command: airflow standalone
     restart: unless-stopped

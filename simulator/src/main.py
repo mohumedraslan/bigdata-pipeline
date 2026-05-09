@@ -1,20 +1,3 @@
-"""
-simulator/src/main.py
-──────────────────────
-Entrypoint for the sensor simulator.
-
-• Spins up N TruckUnit state machines (one per truck)
-• Each tick: advances physics, emits SensorReading → parking.sensors.raw
-                                       ParkingDecision → parking.decisions
-• Resets each truck after it successfully parks (infinite loop)
-
-Firebase note
-─────────────
-In production the sensor readings come from Firebase Realtime Database.
-This simulator produces identical JSON payloads so swapping the source
-requires only changing the ingest point – the rest of the pipeline is untouched.
-"""
-
 import os
 import time
 import logging
@@ -26,14 +9,12 @@ from kafka.errors import NoBrokersAvailable
 from schemas import SensorReading, ParkingDecision, Alert
 from parking_state_machine import TruckUnit
 
-# ── Logging ───────────────────────────────────────────────────────────────────
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s — %(message)s",
 )
 log = logging.getLogger("simulator")
 
-# ── Config from environment ────────────────────────────────────────────────────
 BOOTSTRAP_SERVERS  = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "kafka:9092")
 TOPIC_RAW          = os.getenv("KAFKA_TOPIC_RAW", "parking.sensors.raw")
 TOPIC_DECISIONS    = os.getenv("KAFKA_TOPIC_DECISIONS", "parking.decisions")
@@ -45,15 +26,14 @@ SPOT_IDS = [f"SPOT_{row}{num}" for row in "ABCD" for num in range(1, 6)]
 
 
 def build_producer(retries: int = 15, delay: int = 4) -> KafkaProducer:
-    """Retry connecting until Kafka is ready."""
     for attempt in range(1, retries + 1):
         try:
             producer = KafkaProducer(
                 bootstrap_servers=BOOTSTRAP_SERVERS,
                 value_serializer=lambda v: v.encode("utf-8"),
-                acks="all",              # wait for leader + all in-sync replicas
+                acks="all",
                 retries=5,
-                linger_ms=10,           # micro-batching for throughput
+                linger_ms=10,
                 compression_type="gzip",
             )
             log.info("✅ Connected to Kafka at %s", BOOTSTRAP_SERVERS)
@@ -86,21 +66,18 @@ def main() -> None:
         for unit in units:
             reading, decision = unit.step()
 
-            # ── Publish raw sensor reading ─────────────────────────────────
             producer.send(
                 TOPIC_RAW,
                 key=unit.unit_id.encode(),
                 value=reading.to_json(),
             )
 
-            # ── Publish decision ───────────────────────────────────────────
             producer.send(
                 TOPIC_DECISIONS,
                 key=unit.unit_id.encode(),
                 value=decision.to_json(),
             )
 
-            # ── Publish alert if critical ──────────────────────────────────
             if reading.is_critical:
                 alert = Alert(
                     unit_id    = unit.unit_id,
@@ -126,7 +103,44 @@ def main() -> None:
                 decision.decision, decision.confidence,
             )
 
-            # ── Reset truck after successful park ──────────────────────────
+            if unit.is_done():
+                log.info("🅿️  %s successfully parked at %s — resetting", unit.unit_id, unit.spot_id)
+                unit.spot_id = random.choice(SPOT_IDS)
+                unit.reset()
+
+        producer.flush()
+        time.sleep(EMIT_INTERVAL)
+
+
+if __name__ == "__main__":
+    main()
+            )
+
+            if reading.is_critical:
+                alert = Alert(
+                    unit_id    = unit.unit_id,
+                    session_id = unit.session_id,
+                    severity   = "CRITICAL",
+                    message    = (
+                        f"Obstacle within critical range: "
+                        f"F={reading.front_cm}cm R={reading.rear_cm}cm "
+                        f"L={reading.left_cm}cm Ri={reading.right_cm}cm"
+                    ),
+                    front_cm   = reading.front_cm,
+                    rear_cm    = reading.rear_cm,
+                    left_cm    = reading.left_cm,
+                    right_cm   = reading.right_cm,
+                )
+                producer.send(TOPIC_ALERTS, key=unit.unit_id.encode(), value=alert.to_json())
+                log.warning("🚨 ALERT: %s", alert.message)
+
+            log.info(
+                "📡 %s | Phase=%-12s | F=%5.1f R=%5.1f L=%5.1f Ri=%5.1f | %-16s (%.2f)",
+                unit.unit_id, unit.phase,
+                reading.front_cm, reading.rear_cm, reading.left_cm, reading.right_cm,
+                decision.decision, decision.confidence,
+            )
+
             if unit.is_done():
                 log.info("🅿️  %s successfully parked at %s — resetting", unit.unit_id, unit.spot_id)
                 unit.spot_id = random.choice(SPOT_IDS)

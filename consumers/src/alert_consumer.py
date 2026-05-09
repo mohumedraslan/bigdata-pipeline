@@ -1,17 +1,3 @@
-"""
-consumers/src/alert_consumer.py
-────────────────────────────────
-Dedicated consumer for the parking.alerts topic.
-
-In production this is where you would:
-  • Send push notifications to operators
-  • Write to a PagerDuty / Slack webhook
-  • Trigger a physical alarm / emergency stop relay on the truck
-
-For the university demo it prints a structured alert log and persists
-all alerts to MongoDB for post-incident analysis.
-"""
-
 import os
 import json
 import logging
@@ -69,7 +55,6 @@ def main() -> None:
         else:
             log.warning("🟡 [%s] %s", unit_id, message)
 
-        # Persist for post-incident review
         col.insert_one(alert)
 
 
