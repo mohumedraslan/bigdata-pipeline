@@ -187,4 +187,5 @@ services:
     environment:
       GF_SECURITY_ADMIN_PASSWORD: admin
       GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_DATASOURCES_INFLUXDB_SECUREJSONDATA_TOKEN: ${INFLUX_TOKEN}
     restart: unless-stopped

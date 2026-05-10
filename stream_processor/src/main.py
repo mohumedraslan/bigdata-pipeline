@@ -193,32 +193,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-        )
-        .agg(
-            F.count("*")            .alias("reading_count"),
-            F.avg("front_cm")       .alias("avg_front_cm"),
-            F.avg("rear_cm")        .alias("avg_rear_cm"),
-            F.min("min_clearance")  .alias("min_clearance_30s"),
-            F.sum(
-                F.when(F.col("alert_flag"), 1).otherwise(0)
-            ).alias("alert_count"),
-        )
-    )
-
-    sink_window = (
-        windowed.writeStream
-        .outputMode("update")
-        .format("console")
-        .option("truncate", False)
-        .option("numRows", 20)
-        .option("checkpointLocation", "/tmp/checkpoints/window")
-        .trigger(processingTime="30 seconds")
-        .start()
-    )
-
-    log.info("✅ All streaming sinks started — awaiting data …")
-    spark.streams.awaitAnyTermination()
-
-
-if __name__ == "__main__":
-    main()
