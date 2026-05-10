@@ -192,3 +192,4 @@ services:
       - ./spark/jobs:/opt/airflow/jobs
     command: airflow standalone
     restart: unless-stopped
+  
