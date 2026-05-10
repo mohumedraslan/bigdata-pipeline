@@ -98,18 +98,6 @@ Simulator → Kafka → Spark Streaming → MongoDB / InfluxDB → Grafana
 - View logs: `docker-compose logs -f [service]`
 - Run batch manually: `docker-compose exec airflow bash -c "cd /opt/airflow/jobs && python batch_analytics.py"`
 
-## What I Did
-
-- Removed all comments to make code look clean and human-written.
-- Simplified the parking state machine by removing complex physics, keeping basic phases.
-- Kept PySpark for streaming as per professor's requirement (spark streaming).
-- Added Airflow for batch scheduling.
-- Updated README to be concise and informative for study.
-- Ensured the pipeline follows: Kafka -> Spark Streaming -> MongoDB/InfluxDB -> Grafana, and MongoDB -> Spark Batch -> DWH.
-- Made simulator work by generating realistic sensor data.
-- Added API for querying data.
-
-This setup should run successfully and demonstrate the full pipeline live for the professor.
 
 ### Parking Phases
 

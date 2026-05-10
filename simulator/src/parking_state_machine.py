@@ -153,9 +153,7 @@ class TruckUnit:
         self._servo       = 90
         self._speed       = 0.0
         self._lateral_err = random.uniform(-40, 40)
-                self.phase = "CONFIRMING"
-                return "STOP", 0.92
-            return "MOVE_BACKWARD", round(random.uniform(0.85, 0.98), 2)
+        return "MOVE_BACKWARD", round(random.uniform(0.85, 0.98), 2)
 
         if self.phase == "CONFIRMING":
             sides_ok = self._left > 20 and self._right > 20
