@@ -64,13 +64,6 @@ Simulator → Kafka → Spark Streaming → MongoDB / InfluxDB → Grafana
 4. Batch job analyzes historical data, loads to DWH.
 5. API allows querying the data.
 
-## For University Presentation
-
-- Show the simulator running and generating data.
-- Demonstrate data in Kafka, MongoDB, InfluxDB.
-- Show Grafana dashboards with live data.
-- Run batch analytics and show results.
-- Explain each component and how they fit the pipeline.
 
 ## Files Structure
 
@@ -82,7 +75,6 @@ Simulator → Kafka → Spark Streaming → MongoDB / InfluxDB → Grafana
 - grafana/: Dashboard configs
 - docker-compose.yml: Services setup
 
-## Key Points to Study
 
 - **Kafka**: Pub-sub messaging. Topics: parking.sensors.raw, parking.decisions, parking.alerts.
 - **Spark Streaming**: Real-time processing using Structured Streaming. Reads from Kafka, writes to MongoDB and InfluxDB.
@@ -91,12 +83,6 @@ Simulator → Kafka → Spark Streaming → MongoDB / InfluxDB → Grafana
 - **Grafana**: Visualization tool connected to InfluxDB.
 - **API**: REST endpoints for data access.
 
-## Commands
-
-- Start: `docker-compose up -d`
-- Stop: `docker-compose down`
-- View logs: `docker-compose logs -f [service]`
-- Run batch manually: `docker-compose exec airflow bash -c "cd /opt/airflow/jobs && python batch_analytics.py"`
 
 
 ### Parking Phases
